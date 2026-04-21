@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Premium Glass Slider</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* 🌫 BACKGROUND */
+.bg {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(40px) brightness(0.7);
+  transform: scale(1.2);
+  z-index: -1;
+  transition: 0.5s ease;
+}
+
+/* 🧊 GLASS CARD */
+.slider {
+  width: 90%;
+  max-width: 620px;
+  padding: 18px;
+
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(18px);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.3);
+
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+/* 🖼 IMAGE AREA (FIXED PROPERLY) */
+.slide-container {
+  width: 100%;
+  max-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.slides {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+
+.slide {
+  min-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ✅ NO CUT EVER */
+.slide img {
+  max-width: 100%;
+  max-height: 70vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 14px;
+}
+
+/* CONTROLS */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 14px;
+  gap: 8px;
+}
+
+.arrow {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.25);
+  color: white;
+  cursor: pointer;
+}
+
+/* THUMBNAILS */
+.thumbnails {
+  display: flex;
+  gap: 6px;
+}
+
+.thumb {
+  width: 60px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 8px;
+  opacity: 0.5;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.thumb.active {
+  opacity: 1;
+  border-color: #fff;
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  body {
+    overflow: auto;
+    padding: 20px 0;
+  }
+
+  .slide img {
+    max-height: 50vh;
+  }
+
+  .thumb {
+    width: 48px;
+    height: 36px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="bg" id="bg"></div>
+
+<div class="slider">
+
+  <div class="slide-container" id="touchArea">
+    <div class="slides" id="slides">
+
+      <!-- CLONE LAST -->
+      <div class="slide"><img src="H4.png"></div>
+
+      <!-- REAL -->
+      <div class="slide"><img src="H1.png"></div>
+      <div class="slide"><img src="H2.png"></div>
+      <div class="slide"><img src="H3.png"></div>
+      <div class="slide"><img src="H4.png"></div>
+
+      <!-- CLONE FIRST -->
+      <div class="slide"><img src="H1.png"></div>
+
+    </div>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="arrow" onclick="prev()">❮</button>
+
+    <div class="thumbnails">
+      <img src="H1.png" class="thumb active" onclick="goTo(1)">
+      <img src="H2.png" class="thumb" onclick="goTo(2)">
+      <img src="H3.png" class="thumb" onclick="goTo(3)">
+      <img src="H4.png" class="thumb" onclick="goTo(4)">
+    </div>
+
+    <button class="arrow" onclick="next()">❯</button>
+  </div>
+
+</div>
+
+<script>
+let index = 1;
+
+const images = ["H1.png", "H2.png", "H3.png", "H4.png"];
+
+const slides = document.getElementById("slides");
+const thumbs = document.querySelectorAll(".thumb");
+const bg = document.getElementById("bg");
+const total = images.length;
+
+/* UPDATE */
+function update() {
+  slides.style.transition = "0.5s";
+  slides.style.transform = `translateX(-${index * 100}%)`;
+
+  let realIndex = index - 1;
+  if (realIndex < 0) realIndex = total - 1;
+  if (realIndex >= total) realIndex = 0;
+
+  thumbs.forEach(t => t.classList.remove("active"));
+  thumbs[realIndex].classList.add("active");
+
+  bg.style.backgroundImage = `url(${images[realIndex]})`;
+}
+
+/* NEXT */
+function next() {
+  index++;
+  update();
+}
+
+/* PREV */
+function prev() {
+  index--;
+  update();
+}
+
+/* LOOP FIX */
+slides.addEventListener("transitionend", () => {
+  if (index === 0) {
+    slides.style.transition = "none";
+    index = total;
+    slides.style.transform = `translateX(-${index * 100}%)`;
+  }
+
+  if (index === total + 1) {
+    slides.style.transition = "none";
+    index = 1;
+    slides.style.transform = `translateX(-${index * 100}%)`;
+  }
+});
+
+/* THUMB */
+function goTo(i) {
+  index = i;
+  update();
+}
+
+/* TAP LEFT / RIGHT */
+const touchArea = document.getElementById("touchArea");
+
+touchArea.addEventListener("click", function(e) {
+  const w = touchArea.clientWidth;
+  const x = e.offsetX;
+
+  if (x > w / 2) next();
+  else prev();
+});
+
+/* SWIPE */
+let startX = 0;
+
+touchArea.addEventListener("touchstart", e => {
+  startX = e.touches[0].clientX;
+});
+
+touchArea.addEventListener("touchend", e => {
+  let endX = e.changedTouches[0].clientX;
+
+  if (startX - endX > 50) next();
+  if (endX - startX > 50) prev();
+});
+
+update();
+</script>
+
+</body>
+</html>
